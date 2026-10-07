@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/social_media_row.dart';
 import '../widgets/profile_photo.dart';
 import '../widgets/profile_info.dart';
 
@@ -30,6 +31,9 @@ class ProfileScreen extends StatelessWidget {
                 email: 'email@students.amikom.ac.id',
                 lokasi: 'Yogyakarta, Indonesia',
               ),
+              const SizedBox(height: 16),
+              const SocialMediaRow(),
+              const SizedBox(height: 24),
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
