@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../widgets/social_media_row.dart';
 import '../widgets/profile_photo.dart';
 import '../widgets/profile_info.dart';
+import 'about_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -49,6 +50,14 @@ class ProfileScreen extends StatelessWidget {
                     label: const Text('Bagikan'),
                   ),
                 ],
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AboutScreen()),
+                ),
+                child: const Text('Tentang Aplikasi'),
               ),
             ],
           ),
