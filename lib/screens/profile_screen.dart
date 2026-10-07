@@ -16,51 +16,55 @@ class ProfileScreen extends StatelessWidget {
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 24),
-              const ProfilePhoto(radius: 60),
-              const SizedBox(height: 24),
-              const ProfileInfo(
-                name: 'Nama Mahasiswa',
-                nim: '21.11.0000',
-                programStudi: 'S1 Informatika',
-                email: 'email@students.amikom.ac.id',
-                lokasi: 'Yogyakarta, Indonesia',
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            // Area konten mengisi sisa ruang
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: const [
+                    SizedBox(height: 24),
+                    ProfilePhoto(radius: 60),
+                    SizedBox(height: 24),
+                    ProfileInfo(
+                      name: 'Quhadja Afafa Birru Auliya',
+                      nim: '25.11.6301',
+                      programStudi: 'S1 Informatika',
+                      email: 'q.afafa@students.amikom.ac.id',
+                      lokasi: 'Yogyakarta, Indonesia',
+                    ),
+                    SizedBox(height: 16),
+                    SocialMediaRow(),
+                  ],
+                ),
               ),
-              const SizedBox(height: 16),
-              const SocialMediaRow(),
-              const SizedBox(height: 24),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton.icon(
+            ),
+            Row(
+              children: [
+                Flexible(
+                  flex: 1,
+                  fit: FlexFit.tight,
+                  child: ElevatedButton.icon(
                     onPressed: () {},
                     icon: const Icon(Icons.edit),
                     label: const Text('Edit'),
                   ),
-                  ElevatedButton.icon(
+                ),
+                const SizedBox(width: 12),
+                Flexible(
+                  flex: 1,
+                  fit: FlexFit.tight,
+                  child: ElevatedButton.icon(
                     onPressed: () {},
                     icon: const Icon(Icons.share),
                     label: const Text('Bagikan'),
                   ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AboutScreen()),
                 ),
-                child: const Text('Tentang Aplikasi'),
-              ),
-            ],
-          ),
+              ],
+            ),
+          ],
         ),
       ),
     );
