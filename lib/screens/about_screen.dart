@@ -7,6 +7,7 @@ class AboutScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
+        fit: StackFit.expand,
         alignment: Alignment.center,
         children: [
           // 1. Latar gradient
@@ -22,12 +23,14 @@ class AboutScreen extends StatelessWidget {
             ),
           ),
           // 2. Teks tengah
-          const Text(
-            'Tentang Aplikasi',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
+          const Center(
+            child: Text(
+              'Tentang Aplikasi',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
           // 3. Tombol kembali, pojok kiri atas
