@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import 'profile_screen.dart';
 
@@ -7,9 +8,9 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = UserProvider.of(context);
-
-    return Scaffold(
+    // Latihan 4: Consumer<UserProvider> menggantikan UserProvider.of(context)
+    return Consumer<UserProvider>(
+      builder: (context, provider, child) => Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
         backgroundColor: Colors.deepPurple,
@@ -21,7 +22,8 @@ class HomeScreen extends StatelessWidget {
               provider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
             ),
             tooltip: provider.isDarkMode ? 'Mode Terang' : 'Mode Gelap',
-            onPressed: provider.toggleTheme,
+            // context.read: memanggil method tanpa mendaftarkan rebuild
+            onPressed: () => context.read<UserProvider>().toggleTheme(),
           ),
         ],
       ),
@@ -97,6 +99,7 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
             ),
+      ),
     );
   }
 }

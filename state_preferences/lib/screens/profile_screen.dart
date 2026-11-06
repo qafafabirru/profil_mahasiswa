@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import '../utils/security_validator.dart';
 
@@ -21,8 +22,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    // Pakai read() (bukan of()) karena dependency belum boleh didaftarkan di initState
-    final provider = UserProvider.read(context);
+    // Latihan 4: context.read() aman dipakai di initState (tidak listen)
+    final provider = context.read<UserProvider>();
     _nameController = TextEditingController(text: provider.user.name);
     _emailController = TextEditingController(text: provider.user.email);
   }
@@ -38,7 +39,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final provider = UserProvider.read(context);
+    final provider = context.read<UserProvider>();
     final messenger = ScaffoldMessenger.of(context);
     final name = _nameController.text.trim();
     final email = _emailController.text.trim();
@@ -93,13 +94,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // Latihan 3: tambah item favorit
   void _addFavorite() {
     if (!_favoriteFormKey.currentState!.validate()) return;
-    UserProvider.read(context).addFavorite(_favoriteController.text);
+    context.read<UserProvider>().addFavorite(_favoriteController.text);
     _favoriteController.clear();
     FocusScope.of(context).unfocus();
   }
 
   void _logout() {
-    final provider = UserProvider.read(context);
+    final provider = context.read<UserProvider>();
 
     showDialog(
       context: context,
@@ -126,7 +127,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = UserProvider.of(context);
+    // Latihan 4: context.watch() -> rebuild saat UserProvider memanggil
+    // notifyListeners()
+    final provider = context.watch<UserProvider>();
 
     return Scaffold(
       appBar: AppBar(

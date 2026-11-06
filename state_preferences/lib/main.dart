@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'providers/user_provider.dart';
 import 'screens/home_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    // Latihan 4: ChangeNotifierProvider menyediakan instance UserProvider
+    // ke seluruh subtree (menggantikan UserProviderWrapper)
+    ChangeNotifierProvider(
+      create: (_) => UserProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -11,37 +19,27 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const UserProviderWrapper(
-      child: AppView(),
-    );
-  }
-}
-
-// Latihan 1: MaterialApp dipisah ke widget sendiri agar berada DI BAWAH
-// UserProviderWrapper, sehingga bisa membaca isDarkMode dari UserProvider.
-class AppView extends StatelessWidget {
-  const AppView({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final provider = UserProvider.of(context);
-
-    return MaterialApp(
-      title: 'State & Preferences',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple,
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-      ),
-      themeMode: provider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-      home: const HomeScreen(),
+    // Consumer: rebuild MaterialApp hanya saat UserProvider berubah
+    return Consumer<UserProvider>(
+      builder: (context, provider, child) {
+        return MaterialApp(
+          title: 'State & Preferences',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+            useMaterial3: true,
+          ),
+          darkTheme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.deepPurple,
+              brightness: Brightness.dark,
+            ),
+            useMaterial3: true,
+          ),
+          themeMode: provider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          home: const HomeScreen(),
+        );
+      },
     );
   }
 }

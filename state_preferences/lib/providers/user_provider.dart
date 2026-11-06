@@ -1,5 +1,4 @@
-import 'package:flutter/foundation.dart' show listEquals;
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
 
@@ -14,83 +13,10 @@ class PrefKeys {
   static const String registeredEmails = 'registered_emails'; // Latihan 5
 }
 
-// InheritedWidget: menyediakan data ke seluruh widget di bawahnya (subtree)
-class UserProvider extends InheritedWidget {
-  final User user;
-  final Future<void> Function(User) updateUser;
-  final VoidCallback logout;
-  final bool isLoading;
-
-  // Latihan 1: preferensi tema
-  final bool isDarkMode;
-  final VoidCallback toggleTheme;
-
-  // Latihan 2: jumlah aplikasi dibuka
-  final int visitCount;
-
-  // Latihan 3: daftar favorit (hobi)
-  final List<String> favorites;
-  final void Function(String item) addFavorite;
-  final void Function(String item) removeFavorite;
-
-  // Latihan 5: cek apakah email sudah dipakai
-  final Future<bool> Function(String email) isEmailTaken;
-
-  const UserProvider({
-    super.key,
-    required this.user,
-    required this.updateUser,
-    required this.logout,
-    required this.isLoading,
-    required this.isDarkMode,
-    required this.toggleTheme,
-    required this.visitCount,
-    required this.favorites,
-    required this.addFavorite,
-    required this.removeFavorite,
-    required this.isEmailTaken,
-    required super.child,
-  });
-
-  // of(): dipakai di build(). Widget akan di-rebuild saat data berubah.
-  static UserProvider of(BuildContext context) {
-    final provider =
-        context.dependOnInheritedWidgetOfExactType<UserProvider>();
-    assert(provider != null, 'UserProvider tidak ditemukan di context');
-    return provider!;
-  }
-
-  // read(): dipakai di initState() atau event handler (tombol).
-  // Tidak mendaftarkan dependency, sehingga aman dipanggil di initState.
-  static UserProvider read(BuildContext context) {
-    final provider =
-        context.getInheritedWidgetOfExactType<UserProvider>();
-    assert(provider != null, 'UserProvider tidak ditemukan di context');
-    return provider!;
-  }
-
-  // Menentukan apakah widget dependents perlu di-rebuild
-  @override
-  bool updateShouldNotify(UserProvider oldWidget) {
-    return oldWidget.user != user ||
-        oldWidget.isLoading != isLoading ||
-        oldWidget.isDarkMode != isDarkMode ||
-        oldWidget.visitCount != visitCount ||
-        !listEquals(oldWidget.favorites, favorites);
-  }
-}
-
-// StatefulWidget yang membungkus InheritedWidget
-class UserProviderWrapper extends StatefulWidget {
-  final Widget child;
-
-  const UserProviderWrapper({super.key, required this.child});
-
-  @override
-  State<UserProviderWrapper> createState() => _UserProviderWrapperState();
-}
-
-class _UserProviderWrapperState extends State<UserProviderWrapper> {
+// Latihan 4: UserProvider diubah dari InheritedWidget menjadi ChangeNotifier.
+// State disimpan di sini, dan setiap perubahan diumumkan dengan
+// notifyListeners() sehingga Consumer / context.watch() ikut rebuild.
+class UserProvider extends ChangeNotifier {
   User _user = User(name: '', email: '');
   bool _isLoading = true;
   bool _isDarkMode = false;
@@ -103,48 +29,43 @@ class _UserProviderWrapperState extends State<UserProviderWrapper> {
     'test@example.com',
   ];
 
-  @override
-  void initState() {
-    super.initState();
-    _loadUser();
+  // Getter: widget hanya boleh membaca, perubahan lewat method
+  User get user => _user;
+  bool get isLoading => _isLoading;
+  bool get isDarkMode => _isDarkMode;
+  int get visitCount => _visitCount;
+  List<String> get favorites => _favorites;
+
+  UserProvider() {
+    loadUser();
   }
 
   // Memuat data user dan preferensi dari SharedPreferences
-  Future<void> _loadUser() async {
+  Future<void> loadUser() async {
     final prefs = await SharedPreferences.getInstance();
-    final name = prefs.getString(PrefKeys.userName) ?? '';
-    final email = prefs.getString(PrefKeys.userEmail) ?? '';
-    final isLoggedIn = prefs.getBool(PrefKeys.isLoggedIn) ?? false;
 
-    // Latihan 1: muat preferensi tema
-    final isDarkMode = prefs.getBool(PrefKeys.isDarkMode) ?? false;
+    _user = User(
+      name: prefs.getString(PrefKeys.userName) ?? '',
+      email: prefs.getString(PrefKeys.userEmail) ?? '',
+      isLoggedIn: prefs.getBool(PrefKeys.isLoggedIn) ?? false,
+    );
+    _isDarkMode = prefs.getBool(PrefKeys.isDarkMode) ?? false;
 
-    // Latihan 2: tambah 1 setiap kali aplikasi dibuka, lalu simpan lagi
-    final visitCount = (prefs.getInt(PrefKeys.visitCount) ?? 0) + 1;
-    await prefs.setInt(PrefKeys.visitCount, visitCount);
+    _visitCount = (prefs.getInt(PrefKeys.visitCount) ?? 0) + 1;
+    await prefs.setInt(PrefKeys.visitCount, _visitCount);
 
-    // Latihan 3: muat daftar favorit
-    final favorites = prefs.getStringList(PrefKeys.favorites) ?? <String>[];
+    _favorites = List.unmodifiable(
+      prefs.getStringList(PrefKeys.favorites) ?? <String>[],
+    );
 
-    if (!mounted) return;
-    setState(() {
-      _user = User(
-        name: name,
-        email: email,
-        isLoggedIn: isLoggedIn,
-      );
-      _isDarkMode = isDarkMode;
-      _visitCount = visitCount;
-      _favorites = List.unmodifiable(favorites);
-      _isLoading = false;
-    });
+    _isLoading = false;
+    notifyListeners();
   }
 
   // Menyimpan data user ke SharedPreferences
-  Future<void> _updateUser(User newUser) async {
-    setState(() {
-      _isLoading = true;
-    });
+  Future<void> updateUser(User newUser) async {
+    _isLoading = true;
+    notifyListeners();
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(PrefKeys.userName, newUser.name);
@@ -162,60 +83,51 @@ class _UserProviderWrapperState extends State<UserProviderWrapper> {
       );
     }
 
-    if (!mounted) return;
-    setState(() {
-      _user = newUser;
-      _isLoading = false;
-    });
+    _user = newUser;
+    _isLoading = false;
+    notifyListeners();
   }
 
   // Logout: hapus data user (kecuali email)
-  Future<void> _logout() async {
+  Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(PrefKeys.userName);
     await prefs.setBool(PrefKeys.isLoggedIn, false);
 
-    if (!mounted) return;
-    setState(() {
-      _user = _user.copyWith(name: '', isLoggedIn: false);
-    });
+    _user = _user.copyWith(name: '', isLoggedIn: false);
+    notifyListeners();
   }
 
-  // Latihan 1: ganti tema Light/Dark lalu simpan ke SharedPreferences
-  Future<void> _toggleTheme() async {
-    final newValue = !_isDarkMode;
-    setState(() {
-      _isDarkMode = newValue;
-    });
+  // Latihan 1: ganti tema Light/Dark
+  Future<void> toggleTheme() async {
+    _isDarkMode = !_isDarkMode;
+    notifyListeners();
 
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(PrefKeys.isDarkMode, newValue);
+    await prefs.setBool(PrefKeys.isDarkMode, _isDarkMode);
   }
 
-  // Latihan 3: simpan daftar favorit ke SharedPreferences (setStringList)
+  // Latihan 3: tambah / hapus favorit
+  Future<void> addFavorite(String item) async {
+    final value = item.trim();
+    if (value.isEmpty || _favorites.contains(value)) return;
+    await _saveFavorites([..._favorites, value]);
+  }
+
+  Future<void> removeFavorite(String item) async {
+    await _saveFavorites(_favorites.where((e) => e != item).toList());
+  }
+
   Future<void> _saveFavorites(List<String> newList) async {
-    setState(() {
-      // List baru dibuat agar updateShouldNotify mendeteksi perubahan
-      _favorites = List.unmodifiable(newList);
-    });
+    _favorites = List.unmodifiable(newList);
+    notifyListeners();
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(PrefKeys.favorites, newList);
   }
 
-  void _addFavorite(String item) {
-    final value = item.trim();
-    if (value.isEmpty || _favorites.contains(value)) return;
-    _saveFavorites([..._favorites, value]);
-  }
-
-  void _removeFavorite(String item) {
-    _saveFavorites(_favorites.where((e) => e != item).toList());
-  }
-
-  // Latihan 5: email dianggap sudah dipakai jika ada di daftar terdaftar
-  // dan BUKAN email milik user yang sedang tersimpan (user_email).
-  Future<bool> _isEmailTaken(String email) async {
+  // Latihan 5: cek apakah email sudah digunakan
+  Future<bool> isEmailTaken(String email) async {
     final prefs = await SharedPreferences.getInstance();
     final normalized = email.trim().toLowerCase();
 
@@ -227,23 +139,5 @@ class _UserProviderWrapperState extends State<UserProviderWrapper> {
         prefs.getStringList(PrefKeys.registeredEmails) ?? <String>[];
     return _dummyRegisteredEmails.contains(normalized) ||
         registered.contains(normalized);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return UserProvider(
-      user: _user,
-      updateUser: _updateUser,
-      logout: _logout,
-      isLoading: _isLoading,
-      isDarkMode: _isDarkMode,
-      toggleTheme: _toggleTheme,
-      visitCount: _visitCount,
-      favorites: _favorites,
-      addFavorite: _addFavorite,
-      removeFavorite: _removeFavorite,
-      isEmailTaken: _isEmailTaken,
-      child: widget.child,
-    );
   }
 }
